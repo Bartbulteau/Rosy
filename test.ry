@@ -1,7 +1,27 @@
 #!/Users/dev/Desktop/Rosy_v3/build/rosy
 
-fn f(x) {
-    return x
+global sqrt2pi = sqrt(2*_ry_math_pi)
+
+fn normpdf(x) {
+    return exp(-x*x/2)/sqrt2pi
 }
 
-println(integrate(f, 2, 3, 10000))
+fn normcdf(x) {
+    return integrate(normpdf, -100, x, 1000)
+}
+
+var r = 0.02
+var T = 1
+var sigma = 0.3
+var S0 = 100
+var K = 90
+
+var d1 = (log(S0/K) + (r + sigma*sigma/2)*T)/sigma/sqrt(T)
+var d2 = d1 - sigma*sqrt(T)
+
+var N1 = normcdf(d1)
+var N2 = normcdf(d2)
+
+var C = N1*S0 - N2*K*exp(-r*T)
+
+println(C)

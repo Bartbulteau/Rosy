@@ -1,5 +1,4 @@
 #include "opcodes.h"
-
 char RyOpcodeNames[N_OPCODES][100] = {
 	"NOP",
 	"LOAD_CONST",
