@@ -6,8 +6,6 @@
 #include "object.h"
 #include "object_pool.h"
 
-extern char RyObjectTypeNames[NUM_OF_OBJ_TYPE][100];
-
 typedef RyObject *( *RyBinaryOperation)(RyObjectPool *, RyObject *, RyObject *);
 typedef RyObject *( *RyUnaryOperation)(RyObjectPool *, RyObject *);
 
@@ -35,8 +33,8 @@ typedef enum RyUnaryOpType_t {
     N_UNOP,
 } RyUnaryOpType;
 
-RyBinaryOperation RyBinaryOps[N_BINOP][NUM_OF_OBJ_TYPE][NUM_OF_OBJ_TYPE];
-RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
+extern RyBinaryOperation RyBinaryOps[N_BINOP][NUM_OF_OBJ_TYPE][NUM_OF_OBJ_TYPE];
+extern RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
 
 /*
     BINARY OPERATIONS

@@ -18,7 +18,7 @@ with open("opcodes.h", "w") as target_file:
     
     target_file.write(f"\n\n#define N_OPCODES {op_counter}\n")
 
-    target_file.write("\n\nstatic char RyOpcodeNames[N_OPCODES][100] = {\n")
+    target_file.write("\n\extern char RyOpcodeNames[N_OPCODES][100] = {\n")
     for op_name in op_names:
         target_file.write(f"\t\"{op_name}\",\n")
     target_file.write("};\n\n")

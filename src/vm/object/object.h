@@ -14,14 +14,7 @@ typedef enum RyObjectType_t {
     NUM_OF_OBJ_TYPE,
 } RyObjectType;
 
-static char RyObjectTypeNames[NUM_OF_OBJ_TYPE][100] = {
-    "unintialized_obj",
-    "nil_obj",
-    "number_obj",
-    "bool_obj",
-    "string_obj",
-    "function_obj"
-};
+extern char RyObjectTypeNames[NUM_OF_OBJ_TYPE][100];
 
 typedef struct RyObject_t {
     struct RyObject_t *next;

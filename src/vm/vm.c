@@ -1,5 +1,7 @@
 #include "vm.h"
 
+
+
 void runtime_error(const char *msg, RyBytecode bytecode) {
     printf("Runtime error [%s %d, l%zu]: %s\n", RyOpcodeNames[bytecode.opcode], bytecode.arg, bytecode.line, msg);
     exit(1);

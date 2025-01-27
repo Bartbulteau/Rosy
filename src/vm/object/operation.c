@@ -1,5 +1,8 @@
 #include "operation.h"
 
+RyBinaryOperation RyBinaryOps[N_BINOP][NUM_OF_OBJ_TYPE][NUM_OF_OBJ_TYPE];
+RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
+
 RyObject *RyInvalidBinaryTypes(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
     RyObject *res = (RyObject *)RyObjectPoolBorrow_Nil(pool);
 

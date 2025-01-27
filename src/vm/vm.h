@@ -14,11 +14,6 @@
 #define VM_CALL_STACK_SIZE 256
 #define VM_IF_STACK_SIZE 64
 
-extern char RyObjectTypeNames[NUM_OF_OBJ_TYPE][100];
-extern char RyOpcodeNames[N_OPCODES][100];
-extern RyBinaryOperation RyBinaryOps[N_BINOP][NUM_OF_OBJ_TYPE][NUM_OF_OBJ_TYPE];
-extern RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
-
 typedef struct RyVM_t {
     RyObject *stack[VM_STACK_SIZE];
     size_t sp;

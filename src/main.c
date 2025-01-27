@@ -5,8 +5,6 @@
 #include "vm/vm.h"
 #include "stdlib/stdlib.h"
 
-extern const char *stdlib_code;
-
 int main(int argc, const char *argv[]) {
     /*
         ARGUMENTS CHECK

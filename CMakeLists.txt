@@ -24,6 +24,7 @@ add_executable(rosy src/main.c
     src/parser/parser.c
 
     src/vm/code/opcodes.h
+    src/vm/code/opcodes.c
     src/vm/code/code_block.h
     src/vm/code/code_block.c
     src/vm/gc/gc.h
@@ -39,4 +40,7 @@ add_executable(rosy src/main.c
 
     src/vm/vm.h
     src/vm/vm.c
+
+    src/stdlib/stdlib.h
+    src/stdlib/stdlib.c
 )
