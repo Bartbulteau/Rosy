@@ -1,0 +1,7 @@
+#!/Users/dev/Desktop/Rosy_v3/build/rosy
+
+fn f(x) {
+    return x
+}
+
+println(integrate(f, 2, 3, 10000))

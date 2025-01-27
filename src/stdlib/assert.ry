@@ -1,0 +1,6 @@
+fn assert(cond, msg) {
+    if (!cond) {
+        println(msg)
+        exit(1)
+    }
+}

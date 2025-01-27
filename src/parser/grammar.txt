@@ -1,0 +1,65 @@
+// PROGRAM
+
+program : declaration* EOF
+
+// DECLARATIONS
+
+declaration : funcDecl | varDecl | statement
+
+funcDecl : "func" function
+
+varDecl : "var" IDENTIFIER ( EQUAL expression )? EOL
+
+// STATEMENTS
+
+statement : exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt| block
+
+exprStmt : expression EOL
+
+forStmt : FOR LEFT_PAREN (varDecl | exprStmt | EOL)? EOL expression? EOL expression? EOL RIGHT_PAREN statement;
+
+ifStmt : IF LEFT_PAREN expression RIGHT_PAREN statement (ELSE statement)?
+
+printStmt : PRINT LEFT_PAREN expression RIGHT_PAREN EOL
+
+exitStmt : PRINT LEFT_PAREN expression RIGHT_PAREN EOL
+
+returnStmt : RETURN expression? EOL
+
+whileStmt : WHILE LEFT_PAREN expression RIGHT_PAREN statement
+
+block : LEFT_BRACE declaration* RIGHT_BRACE
+
+// EXPRESSIONS
+
+expression : assignment
+
+assignment : IDENTIFIER EQUAL assignment | logic_or
+
+logic_or : logic_and ( OR logic_and )*
+
+logic_and : equality ( AND equality )*
+
+equality : comparison ((BANG_EQUAL | EQUAL_EQUAL) comparison)*
+
+comparison : term ((GREATER | GREATER_EQUAL | LESS | LESS_EQUAL) term)*
+
+term : factor ((MINUS | PLUS) factor)
+
+factor : unary ((SLASH | STAR | MOD) unary)*
+
+
+unary = (BANG | MINUS) unary | call
+
+call : primary LEFT_PAREN arguments? RIGHT_PAREN
+
+primary : INTEGER | FLOAT | STRING | IDENTIFIER | (LEFT_PAREN expression RIGHT_PAREN)
+
+
+// UTILITY RULES
+
+function : IDENTIFIER LEFT_PAREN parameters? RIGHT_PAREN block
+
+parameters : IDENTIFIER (COMMA IDENTIFIER)*
+
+arguments : expression (COMMA expression)*

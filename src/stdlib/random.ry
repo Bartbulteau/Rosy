@@ -1,0 +1,41 @@
+global _ry_random_seed = 42
+global _ry_random_m = _ry_math_pown(2, 32)
+global _ry_random_a = 69069
+global _ry_random_b = 0
+
+fn randu() {
+    _ry_random_seed = (_ry_random_a * _ry_random_seed + _ry_random_b) % _ry_random_m
+    return (_ry_random_seed + 1)/(_ry_random_m + 1)
+}
+
+fn rand_uniform(a, b) {
+    assert(a <= b, "rand_uniform: parameters should be such that a <= b")
+    return a + (b-a)*randu()
+}
+
+global _ry_random_use_extra_norm = false
+global _ry_random_norm_extra = 0
+
+fn randnorm() {
+
+    if (_ry_random_use_extra_norm) {
+        _ry_random_use_extra_norm = false
+        return _ry_random_norm_extra
+    }
+
+    var v1 = -1 + 2*randu()
+    var v2 = -1 + 2*randu()
+    var w = v1*v1 + v2*v2
+
+    while(w >= 1) {
+        v1 = -1 + 2*randu()
+        v2 = -1 + 2*randu()
+        w = v1*v1 + v2*v2
+    }
+
+    var a = _ry_math_sqrt(-2*_ry_math_log(w)/w)
+    _ry_random_norm_extra = v1 * a
+    _ry_random_use_extra_norm = true
+    return v2 * a
+
+}
