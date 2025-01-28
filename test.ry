@@ -1,1 +1,1 @@
-println("ABC" == "ABC")
+println("A" + 10 + "C" == "A10C")
