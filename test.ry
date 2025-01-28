@@ -1,2 +1,1 @@
-
-println(sqrt(log(123456789)))
+println("ABC" == "ABC")

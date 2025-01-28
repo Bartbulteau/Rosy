@@ -120,9 +120,21 @@ fn integrate(f, a, b, n) {
 global _ry_math_pi = 3.14159265358979323846264338327950288
 
 fn sin(x) {
-    return x - _ry_math_pown(x, 3)/6 + _ry_math_pown(x, 5)/120 - _ry_math_pown(x, 7)/5040 + _ry_math_pown(x, 9)/362880
+    var n = floor(x / _ry_math_pi)
+    x = x - n * _ry_math_pi
+    var epsilon;
+    if (n % 2 == 0) epsilon = 1
+    else epsilon = - 1
+    var res = x - _ry_math_pown(x, 3)/6 + _ry_math_pown(x, 5)/120 - _ry_math_pown(x, 7)/5040 + _ry_math_pown(x, 9)/362880
+    return epsilon * res
 }
 
 fn cos(x) {
-    return 1 - x*x/2 + _ry_math_pown(x, 4)/24 - _ry_math_pown(x, 6)/720 + _ry_math_pown(x, 8)/40320 - _ry_math_pown(x, 10)/36288000
+    var n = floor(x /_ry_math_pi)
+    x = x - n * _ry_math_pi
+    var epsilon;
+    if (n % 2 == 0) epsilon = 1
+    else epsilon = - 1
+    var res = 1 - x*x/2 + _ry_math_pown(x, 4)/24 - _ry_math_pown(x, 6)/720 + _ry_math_pown(x, 8)/40320 - _ry_math_pown(x, 10)/36288000
+    return epsilon * res
 }

@@ -45,10 +45,17 @@ extern RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
 RyValue RyInvalidBinaryTypes(RyObjectPool *pool, RyValue val1, RyValue val2);
 RyValue RyInvalidUnaryType(RyObjectPool *pool, RyValue val);
 
+// GENERAL
+
+RyValue RyFalseBinaryResult(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyTrueBinaryResult(RyObjectPool *pool, RyValue val1, RyValue val2);
+
 // ADDITION
 
 RyValue RyNumNumAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
 RyValue RyStringStringAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyStringNumAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumStringAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadAdd();
 
@@ -84,6 +91,12 @@ RyValue RyNumNumGreat(RyObjectPool *pool, RyValue val1, RyValue val2);
 RyValue RyNumNumGreq(RyObjectPool *pool, RyValue val1, RyValue val2);
 RyValue RyNumNumEq(RyObjectPool *pool, RyValue val1, RyValue val2);
 RyValue RyNumNumNeq(RyObjectPool *pool, RyValue val1, RyValue val2);
+
+RyValue RyStringStringEq(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyStringStringNeq(RyObjectPool *pool, RyValue val1, RyValue val2);
+
+RyValue RyBoolBoolEq(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyBoolBoolNeq(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadComparisions();
 

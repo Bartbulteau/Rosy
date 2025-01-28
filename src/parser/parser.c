@@ -40,6 +40,7 @@ Token p_advance(Parser *p) {
         p->previous = p->current;
         p->current = p->next;
         p->next = LexerGetNextToken(p->lex);
+        // printf("%d %s\n", p->next.type, p->next.lexeme);
     }
     return p->previous;
 }
