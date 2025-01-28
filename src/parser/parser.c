@@ -382,20 +382,20 @@ void ParseIfStatement(Parser *p) {
     ParseExpression(p);
     p_consume(p, RIGHT_PAREN, "expected a ')' to close the if statement.");
 
-    size_t if_jmp = p->vm->current_func->block.size;
+    size_t if_jmp = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMMakeControlFlow(p->vm);
     RyVMExecute(p->vm, OP_JF, OP_NOP, p_previous(p).line);
     ParseStatement(p);
-    size_t else_jmp = p->vm->current_func->block.size;
+    size_t else_jmp = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMExecute(p->vm, OP_JMP, OP_NOP, p_previous(p).line);
-    size_t if_jmp_target = p->vm->current_func->block.size;
+    size_t if_jmp_target = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMEndMakeControlFlow(p->vm, if_jmp, if_jmp_target - if_jmp - 1);
 
     RyVMMakeControlFlow(p->vm);
     if(p_match(p, 1, ELSE)) {
         ParseStatement(p);
     }
-    size_t else_jmp_target = p->vm->current_func->block.size;
+    size_t else_jmp_target = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMEndMakeControlFlow(p->vm, else_jmp, else_jmp_target - else_jmp - 1);
     RyVMExecute(p->vm, OP_NOP, OP_NOP, p_previous(p).line);
 }
@@ -404,14 +404,14 @@ void ParseWhileStatement(Parser *p) {
     p_consume(p, WHILE, "internal error while parsing while statement.");
     p_consume(p, LEFT_PAREN, "expected a '(' after the while keyword.");
     RyVMMakeControlFlow(p->vm);
-    size_t condition_jmp = p->vm->current_func->block.size;
+    size_t condition_jmp = VAL2FUNC(p->vm->current_func)->block.size;
     ParseExpression(p);
     p_consume(p, RIGHT_PAREN, "expected a ')' to close the while statement.");
-    size_t while_jmp = p->vm->current_func->block.size;
+    size_t while_jmp = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMExecute(p->vm, OP_JF, OP_NOP, p_previous(p).line);
     ParseStatement(p);
-    RyVMExecute(p->vm, OP_JB, p->vm->current_func->block.size - condition_jmp + 1, p_previous(p).line);
-    size_t while_jmp_target = p->vm->current_func->block.size;
+    RyVMExecute(p->vm, OP_JB, VAL2FUNC(p->vm->current_func)->block.size - condition_jmp + 1, p_previous(p).line);
+    size_t while_jmp_target = VAL2FUNC(p->vm->current_func)->block.size;
     RyVMEndMakeControlFlow(p->vm, while_jmp, while_jmp_target - while_jmp - 1);
     RyVMExecute(p->vm, OP_NOP, OP_NOP, p_previous(p).line);
 }

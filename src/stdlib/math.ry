@@ -15,7 +15,7 @@ fn min(x, y) {
 
 fn _ry_math_sqrt(x) {
     var epsilon = 0.00000001
-    var y0 = x/2 + 0.5
+    var y0 = x/2 + epsilon
     var y1 = (y0*y0 + 3*x)/(3*y0 + x/y0)
     while (abs(y1*y1 - x) > epsilon) {
         y0 = y1
@@ -88,7 +88,6 @@ fn _ry_math_log(x) {
         x = x / _ry_math_e
         n = n + 1
     }
-
     return _ry_math_log_helper(1, x, 100) + n
 }
 

@@ -15,14 +15,14 @@
 #define VM_IF_STACK_SIZE 64
 
 typedef struct RyVM_t {
-    RyObject *stack[VM_STACK_SIZE];
+    RyValue stack[VM_STACK_SIZE];
     size_t sp;
 
-    RyObject *param_stack[VM_PARAM_STACK_SIZE];
+    RyValue param_stack[VM_PARAM_STACK_SIZE];
     size_t psp;
 
     size_t call_stack[VM_CALL_STACK_SIZE];
-    RyFunction *function_call_stack[VM_CALL_STACK_SIZE];
+    RyValue function_call_stack[VM_CALL_STACK_SIZE];
     RyVariableArray frame_call_stack[VM_CALL_STACK_SIZE];
     size_t csp;
 
@@ -34,7 +34,7 @@ typedef struct RyVM_t {
 
     RyObjectPool object_pool;
     
-    RyFunction *current_func;
+    RyValue current_func;
 
     size_t record_only;
 

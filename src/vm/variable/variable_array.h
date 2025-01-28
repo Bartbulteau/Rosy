@@ -7,12 +7,12 @@
 typedef struct RyVariableArray_t {
     size_t capacity;
     size_t size;
-    RyObject **entries;
+    RyValue *entries;
 } RyVariableArray;
 
 void RyVariableArrayInit(RyVariableArray *arr);
-void RyVariableArrayWrite(RyVariableArray *arr, size_t idx, RyObject *o);
-RyObject *RyVariableArrayGet(RyVariableArray *arr, size_t idx);
+void RyVariableArrayWrite(RyVariableArray *arr, size_t idx, RyValue val);
+RyValue RyVariableArrayGet(RyVariableArray *arr, size_t idx);
 void RyVariableArrayFree(RyVariableArray *arr);
 
 #endif // VARIABLE_ARRAY_H

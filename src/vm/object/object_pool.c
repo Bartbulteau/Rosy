@@ -19,26 +19,27 @@ void RyObjectPoolFree(RyObjectPool *pool) {
 
 RyObject *RyObjectPoolBorrow(RyObjectPool *pool, size_t size) {
     RyObject *o = (RyObject *)MALLOC(size);
-    o->next = NULL;
     o->next_allocated = pool->allocated_list;
     pool->allocated_list = o;
     o->refc = 0;
-    o->size = size;
     o->type = UNINITIALIZED_OBJ;
+    o->size = size;
 
     pool->obj_count++;
     pool->bytes_allocated += size;
-
+    
     return o;
 }
 
 void RyObjectPoolRelease(RyObjectPool *pool, RyObject *o) {
-
     if(o->type == FUNCTION_OBJ) {
         RyFunction *f = (RyFunction *)o;
         RyCodeBlockFree(&f->block);
     } else if (o->type == STRING_OBJ) {
-        FREE(((RyString *)o)->value);
+        FREE(((RyString *)o)->str);
+    } else {
+        printf("Invalid object type to release.\n");
+        exit(1);
     }
 
     pool->bytes_allocated -= o->size;
@@ -47,38 +48,36 @@ void RyObjectPoolRelease(RyObjectPool *pool, RyObject *o) {
     FREE(o);
 }
 
-RyNil *RyObjectPoolBorrow_Nil(RyObjectPool *pool) {
-    RyNil *nil = (RyNil *)RyObjectPoolBorrow(pool, sizeof(RyNil));
-    nil->base.type = NIL_OBJ;
-    return nil;
+void RyObjectPoolMark(RyValue val) {
+    if (val.type == STRING_OBJ || val.type == FUNCTION_OBJ) {
+        val.as.object->refc++;
+    }
 }
 
-RyNumber *RyObjectPoolBorrow_Number(RyObjectPool *pool) {
-    RyNumber *num = (RyNumber *)RyObjectPoolBorrow(pool, sizeof(RyNumber));
-    num->base.type = NUMBER_OBJ;
-    num->value = 0;
-    return num;
+RyValue RyObjectPoolBorrow_String(RyObjectPool *pool) {
+    RyValue res = {
+        .type = STRING_OBJ,
+        .as.object = RyObjectPoolBorrow(pool, sizeof(RyString))
+    };
+
+    res.as.object->type = STRING_OBJ;
+
+    return res;
 }
 
-RyBool *RyObjectPoolBorrow_Bool(RyObjectPool *pool) {
-    RyBool *b = (RyBool *)RyObjectPoolBorrow(pool, sizeof(RyBool));
-    b->base.type = BOOL_OBJ;
-    b->value = true;
-    return b;
-}
-
-RyString *RyObjectPoolBorrow_String(RyObjectPool *pool) {
-    RyString *str = (RyString *)RyObjectPoolBorrow(pool, sizeof(RyString));
-    str->base.type = STRING_OBJ;
-    str->value = NULL;
-    return str;
-}
-
-RyFunction *RyObjectPoolBorrow_Function(RyObjectPool *pool) {
+RyValue RyObjectPoolBorrow_Function(RyObjectPool *pool) {
     RyFunction *f = (RyFunction *)RyObjectPoolBorrow(pool, sizeof(RyFunction));
-    f->base.type = FUNCTION_OBJ;
+
     RyCodeBlockInit(&f->block);
     RyVariableArrayInit(&f->locals);
     f->ip = 0;
-    return f;
+    
+    RyValue res = {
+        .type = FUNCTION_OBJ,
+        .as.object = (RyObject *)f
+    };
+
+    res.as.object->type = FUNCTION_OBJ;
+
+    return res;
 }

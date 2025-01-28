@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef enum RyObjectType_t {
+typedef enum RyValueType_t {
     UNINITIALIZED_OBJ,
     NIL_OBJ,
     NUMBER_OBJ,
@@ -12,16 +12,24 @@ typedef enum RyObjectType_t {
     STRING_OBJ,
     FUNCTION_OBJ,
     NUM_OF_OBJ_TYPE,
-} RyObjectType;
+} RyValueType;
 
-extern char RyObjectTypeNames[NUM_OF_OBJ_TYPE][100];
+extern char RyValueTypeNames[NUM_OF_OBJ_TYPE][100];
 
 typedef struct RyObject_t {
-    struct RyObject_t *next;
     struct RyObject_t *next_allocated;
-    RyObjectType type;
+    RyValueType type;
     size_t refc;
     size_t size;
 } RyObject;
+
+typedef struct RyValue_t {
+    RyValueType type;
+    union {
+        bool boolean;
+        double number;
+        RyObject *object;
+    } as;
+} RyValue;
 
 #endif // OBJECT_H

@@ -33,33 +33,29 @@ size_t ConstantMapInsert(ConstantMap *map, RyVM *vm, Token t) {
     map->entries[hash] = entry;
     entry->addr = map->count;
 
-    RyObject *o;
+    RyValue val;
 
     if (t.type == NUMBER) {
-        RyNumber *num = RyObjectPoolBorrow_Number(&vm->object_pool);
-        num->value = atof(t.lexeme);
-        o = (RyObject *)num;
+        val = NUM2VAL(atof(t.lexeme));
     } else if (t.type == STRING) {
-        RyString *str = RyObjectPoolBorrow_String(&vm->object_pool);
-        str->value = (char *)MALLOC(strlen(t.lexeme) + 1);
-        strcpy(str->value, t.lexeme);
-        o = (RyObject *)str;
+        val = RyObjectPoolBorrow_String(&vm->object_pool);
+        char *str = (char *)MALLOC(strlen(t.lexeme) + 1);
+        strcpy(str, t.lexeme);
+        ((RyString *)val.as.object)->str = str;
     } else if (t.type == NIL) {
-        o = (RyObject *)RyObjectPoolBorrow_Nil(&vm->object_pool);
+        val.type = NIL_OBJ;
     } else if (t.type == TRUE) {
-        RyBool *b = RyObjectPoolBorrow_Bool(&vm->object_pool);
-        b->value = true;
-        o = (RyObject *)b;
+        val.type = BOOL_OBJ;
+        val.as.boolean = true;
     } else if (t.type == FALSE) {
-        RyBool *b = RyObjectPoolBorrow_Bool(&vm->object_pool);
-        b->value = false;
-        o = (RyObject *)b;
+        val.type = BOOL_OBJ;
+        val.as.boolean = false;
     } else {
         printf("ConstantMap error: invalid token type to insert in constant map.\n");
         exit(1);
     }
 
-    RyVariableArrayWrite(&vm->constants, map->count, o);
+    RyVariableArrayWrite(&vm->constants, map->count, val);
 
     return map->count++;
 }

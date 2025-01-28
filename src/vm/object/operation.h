@@ -6,8 +6,8 @@
 #include "object.h"
 #include "object_pool.h"
 
-typedef RyObject *( *RyBinaryOperation)(RyObjectPool *, RyObject *, RyObject *);
-typedef RyObject *( *RyUnaryOperation)(RyObjectPool *, RyObject *);
+typedef RyValue (*RyBinaryOperation)(RyObjectPool *, RyValue, RyValue);
+typedef RyValue (*RyUnaryOperation)(RyObjectPool *, RyValue);
 
 typedef enum RyBinaryOpType_t {
     ADD_BINOP,
@@ -42,55 +42,55 @@ extern RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
 
 // ERRORS
 
-RyObject *RyInvalidBinaryTypes(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyInvalidUnaryType(RyObjectPool *pool, RyObject *o);
+RyValue RyInvalidBinaryTypes(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyInvalidUnaryType(RyObjectPool *pool, RyValue val);
 
 // ADDITION
 
-RyObject *RyNumNumAdd(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyStringStringAdd(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyStringStringAdd(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadAdd();
 
 // SUBSTRACTION
 
-RyObject *RyNumNumSub(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumSub(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadSub();
 
 // MULTIPLICATION
 
-RyObject *RyNumNumMul(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumMul(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadMul();
 
 // DIVISION
 
-RyObject *RyNumNumDiv(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumDiv(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadDiv();
 
 // MODULO
 
-RyObject *RyNumNumMod(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumMod(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadMod();
 
 // COMPARISIONS
 
-RyObject *RyNumNumLess(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyNumNumLeq(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyNumNumGreat(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyNumNumGreq(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyNumNumEq(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyNumNumNeq(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyNumNumLess(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumNumLeq(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumNumGreat(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumNumGreq(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumNumEq(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumNumNeq(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadComparisions();
 
 // LOGIC
 
-RyObject *RyBoolBoolAnd(RyObjectPool *pool, RyObject *o1, RyObject *o2);
-RyObject *RyBoolBoolOr(RyObjectPool *pool, RyObject *o1, RyObject *o2);
+RyValue RyBoolBoolAnd(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyBoolBoolOr(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadLogics();
 
@@ -100,8 +100,8 @@ void RyLoadBinOps();
     UNARY OPERATIONS
 */
 
-RyObject *RyNumOpp(RyObjectPool *pool, RyObject *o);
-RyObject *RyBoolNot(RyObjectPool *pool, RyObject *o);
+RyValue RyNumOpp(RyObjectPool *pool, RyValue val);
+RyValue RyBoolNot(RyObjectPool *pool, RyValue val);
 
 void RyLoadUnOps();
 

@@ -1,7 +1,5 @@
 #include "vm.h"
 
-
-
 void runtime_error(const char *msg, RyBytecode bytecode) {
     printf("Runtime error [%s %d, l%zu]: %s\n", RyOpcodeNames[bytecode.opcode], bytecode.arg, bytecode.line, msg);
     exit(1);
@@ -12,15 +10,15 @@ void printStack(RyVM *vm) {
     printf("           STACK          \n");
     printf("==========================\n");
     for (size_t i = 0; i < vm->sp; i++) {
-        RyObject *o = vm->stack[i];
-        if (o->type == NUMBER_OBJ) {
-            printf("%g\n", ((RyNumber *)o)->value);
-        } else if (o->type == STRING_OBJ) {
-            printf("%s\n", ((RyString *)o)->value);
-        } else if (o->type == BOOL_OBJ) {
-            printf("%s\n", ((RyBool *)o)->value ? "true" : "false");
+        RyValue val = vm->stack[i];
+        if (val.type == NUMBER_OBJ) {
+            printf("%g\n", VAL2NUM(val));
+        } else if (val.type == STRING_OBJ) {
+            printf("%s\n", VAL2STRING(val)->str);
+        } else if (val.type == BOOL_OBJ) {
+            printf("%s\n", VAL2BOOL(val) ? "true" : "false");
         } else {
-            printf("<%s %p>\n", RyObjectTypeNames[o->type], o);
+            printf("<%s %p>\n", RyValueTypeNames[val.type], val.as.object);
         }
         printf("==========================\n");
     }
@@ -38,11 +36,11 @@ void RyVMInit(RyVM *vm) {
 
     RyObjectPoolInit(&vm->object_pool);
 
-    RyFunction *main_func = RyObjectPoolBorrow_Function(&vm->object_pool);
-    RyVariableArrayWrite(&vm->globals, 0, (RyObject *)main_func);
+    RyValue main_func = RyObjectPoolBorrow_Function(&vm->object_pool);
+    RyVariableArrayWrite(&vm->globals, 0, main_func);
     vm->current_func = main_func;
 
-    RyObject *nil = (RyObject *)RyObjectPoolBorrow_Nil(&vm->object_pool);
+    RyValue nil = {.type = NIL_OBJ};
     RyVariableArrayWrite(&vm->constants, 0, nil);
 
     vm->record_only = 0;
@@ -52,7 +50,7 @@ void RyVMInit(RyVM *vm) {
 }
 
 void RyVMFree(RyVM *vm) {
-    RyVariableArrayFree(&((RyFunction *)RyVariableArrayGet(&vm->globals, 0))->locals);
+    RyVariableArrayFree(&VAL2FUNC(RyVariableArrayGet(&vm->globals, 0))->locals);
     RyVariableArrayFree(&vm->globals);
     RyVariableArrayFree(&vm->constants);
     #ifdef MEMORY_DEBUG
@@ -64,14 +62,14 @@ void RyVMFree(RyVM *vm) {
 
 void RyVMExecute(RyVM *vm, uint16_t opcode, uint16_t arg, size_t line) {
 
-    RyCodeBlockWrite(&vm->current_func->block, opcode, arg, line);
+    RyCodeBlockWrite(&VAL2FUNC(vm->current_func)->block, opcode, arg, line);
     if (vm->record_only > 0) {return;}
 
-    RyObject *o, *o1, *o2;
+    RyValue val, val1, val2;
 
-    while (vm->current_func->ip < vm->current_func->block.size) {
+    while (VAL2FUNC(vm->current_func)->ip < VAL2FUNC(vm->current_func)->block.size) {
 
-        RyBytecode bytecode = vm->current_func->block.code[vm->current_func->ip];
+        RyBytecode bytecode = VAL2FUNC(vm->current_func)->block.code[VAL2FUNC(vm->current_func)->ip];
 
         if (vm->object_pool.bytes_allocated > vm->object_pool.next_gc) RyCollectGarbage(vm);
 
@@ -86,41 +84,40 @@ void RyVMExecute(RyVM *vm, uint16_t opcode, uint16_t arg, size_t line) {
 
             case OP_LOAD_CONST:
                 if (vm->sp >= VM_STACK_SIZE) runtime_error("stack overflow.", bytecode);
-                o = RyVariableArrayGet(&vm->constants, bytecode.arg);
-                vm->stack[vm->sp++] = o;
+                val = RyVariableArrayGet(&vm->constants, bytecode.arg);
+                vm->stack[vm->sp++] = val;
                 
                 break;
 
             case OP_POP:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                
+                val = vm->stack[--vm->sp];                
                 break;
 
             case OP_LOAD_LOCAL:
                 if (vm->sp >= VM_STACK_SIZE) runtime_error("stack overflow.", bytecode);
-                o = RyVariableArrayGet(&vm->current_func->locals, bytecode.arg);
+                val = RyVariableArrayGet(&VAL2FUNC(vm->current_func)->locals, bytecode.arg);
                 
-                vm->stack[vm->sp++] = o;
+                vm->stack[vm->sp++] = val;
                 break;
 
             case OP_STORE_LOCAL:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[vm->sp - 1];
-                RyVariableArrayWrite(&vm->current_func->locals, bytecode.arg, o);
+                val = vm->stack[vm->sp - 1];
+                RyVariableArrayWrite(&VAL2FUNC(vm->current_func)->locals, bytecode.arg, val);
                 break;
 
             case OP_LOAD_GLOBAL:
                 if (vm->sp >= VM_STACK_SIZE) runtime_error("stack overflow.", bytecode);
-                o = RyVariableArrayGet(&vm->globals, bytecode.arg);
-                vm->stack[vm->sp++] = o;
+                val = RyVariableArrayGet(&vm->globals, bytecode.arg);
+                vm->stack[vm->sp++] = val;
                 
                 break;
             
             case OP_STORE_GLOBAL:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[vm->sp - 1];
-                RyVariableArrayWrite(&vm->globals, bytecode.arg, o);
+                val = vm->stack[vm->sp - 1];
+                RyVariableArrayWrite(&vm->globals, bytecode.arg, val);
                 break;
 
             case OP_LOAD_PARAM:
@@ -131,108 +128,103 @@ void RyVMExecute(RyVM *vm, uint16_t opcode, uint16_t arg, size_t line) {
             
             case OP_STORE_PARAM:
                 if (vm->psp < 1) runtime_error("parameters stack underflow.", bytecode);
-                RyVariableArrayWrite(&vm->current_func->locals, bytecode.arg, vm->param_stack[--vm->psp]);
+                RyVariableArrayWrite(&VAL2FUNC(vm->current_func)->locals, bytecode.arg, vm->param_stack[--vm->psp]);
                 break;
 
             case OP_CALL:
                 if (vm->csp >= VM_CALL_STACK_SIZE) runtime_error("call stack overflow.", bytecode);
-                vm->call_stack[vm->csp] = vm->current_func->ip;
-                vm->frame_call_stack[vm->csp] = vm->current_func->locals;
+                vm->call_stack[vm->csp] = VAL2FUNC(vm->current_func)->ip;
+                vm->frame_call_stack[vm->csp] = VAL2FUNC(vm->current_func)->locals;
                 vm->function_call_stack[vm->csp++] = vm->current_func;
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                if (o->type != FUNCTION_OBJ) runtime_error("invalid object type to call.", bytecode);
-                vm->current_func = (RyFunction *)o;
-                vm->current_func->ip = 0;
-                RyVariableArrayInit(&vm->current_func->locals);
+                val = vm->stack[--vm->sp];
+                if (val.type != FUNCTION_OBJ) runtime_error("invalid object type to call.", bytecode);
+                vm->current_func = val;
+                VAL2FUNC(vm->current_func)->ip = 0;
+                RyVariableArrayInit(&VAL2FUNC(vm->current_func)->locals);
                 continue;
                 break;
 
             case OP_RET:
                 if (vm->csp < 1) runtime_error("call stack underflow.", bytecode);
-                RyVariableArrayFree(&vm->current_func->locals);
+                RyVariableArrayFree(&VAL2FUNC(vm->current_func)->locals);
                 vm->current_func = vm->function_call_stack[--vm->csp];
-                vm->current_func->ip = vm->call_stack[vm->csp];
-                vm->current_func->locals = vm->frame_call_stack[vm->csp];
+                VAL2FUNC(vm->current_func)->ip = vm->call_stack[vm->csp];
+                VAL2FUNC(vm->current_func)->locals = vm->frame_call_stack[vm->csp];
                 break;
 
             case OP_RET_NIL:
                 if (vm->csp < 1) runtime_error("call stack underflow.", bytecode);
-                RyVariableArrayFree(&vm->current_func->locals);
+                RyVariableArrayFree(&VAL2FUNC(vm->current_func)->locals);
                 vm->current_func = vm->function_call_stack[--vm->csp];
-                vm->current_func->ip = vm->call_stack[vm->csp];
-                vm->current_func->locals = vm->frame_call_stack[vm->csp];
+                VAL2FUNC(vm->current_func)->ip = vm->call_stack[vm->csp];
+                VAL2FUNC(vm->current_func)->locals = vm->frame_call_stack[vm->csp];
                 if (vm->sp >= VM_STACK_SIZE) runtime_error("stack overflow.", bytecode);
-                o = RyVariableArrayGet(&vm->constants, 0);
-                vm->stack[vm->sp++] = o;
+                val = RyVariableArrayGet(&vm->constants, 0);
+                vm->stack[vm->sp++] = val;
                 break;
 
             case OP_JMP:
-                vm->current_func->ip += bytecode.arg;
+                VAL2FUNC(vm->current_func)->ip += bytecode.arg;
                 break;
 
             case OP_JF:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                if (o->type != BOOL_OBJ) runtime_error("expected boolean value in 'jump if false'.", bytecode);
-                if (!((RyBool *)o)->value) vm->current_func->ip += bytecode.arg;
+                val = vm->stack[--vm->sp];
+                if (val.type != BOOL_OBJ) runtime_error("expected boolean value in 'jump if false'.", bytecode);
+                if (!VAL2BOOL(val)) VAL2FUNC(vm->current_func)->ip += bytecode.arg;
                 
                 break;
 
             case OP_JT:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                if (o->type != BOOL_OBJ) runtime_error("expected boolean value in 'jump if true'.", bytecode);
-                if (((RyBool *)o)->value) vm->current_func->ip += bytecode.arg;
+                val = vm->stack[--vm->sp];
+                if (val.type != BOOL_OBJ) runtime_error("expected boolean value in 'jump if true'.", bytecode);
+                if (VAL2BOOL(val)) VAL2FUNC(vm->current_func)->ip += bytecode.arg;
                 
                 break;
 
             case OP_JB:
-                vm->current_func->ip -= bytecode.arg;
+                VAL2FUNC(vm->current_func)->ip -= bytecode.arg;
                 break;
 
             case OP_BINARY_OP:
                 if (vm->sp < 2) runtime_error("stack underflow.", bytecode);
-                o1 = vm->stack[--vm->sp];
-                o2 = vm->stack[--vm->sp];
-                o = RyBinaryOps[bytecode.arg][o2->type][o1->type](&vm->object_pool, o2, o1);
-                if (o->type == NIL_OBJ) runtime_error("incompatible types in binary operation.", bytecode);
-                vm->stack[vm->sp++] = o;
-                
-                
-                
+                val1 = vm->stack[--vm->sp];
+                val2 = vm->stack[--vm->sp];
+                val = RyBinaryOps[bytecode.arg][val2.type][val1.type](&vm->object_pool, val2, val1);
+                if (val.type == NIL_OBJ) runtime_error("incompatible types in binary operation.", bytecode);
+                vm->stack[vm->sp++] = val;
                 break;
 
             case OP_UNARY_OP:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                o1 = RyUnaryOps[bytecode.arg][o->type](&vm->object_pool, o);
-                if (o->type == NIL_OBJ) runtime_error("incompatible type in unary operation.", bytecode);
-                vm->stack[vm->sp++] = o1;
-                
-                
+                val = vm->stack[--vm->sp];
+                val1 = RyUnaryOps[bytecode.arg][val.type](&vm->object_pool, val);
+                if (val.type == NIL_OBJ) runtime_error("incompatible type in unary operation.", bytecode);
+                vm->stack[vm->sp++] = val1;
                 break;
 
             case OP_PRINT:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                if (o->type == NUMBER_OBJ) {
-                    printf("%g", ((RyNumber *)o)->value);
-                } else if (o->type == STRING_OBJ) {
-                    printf("%s", ((RyString *)o)->value);
-                } else if (o->type == BOOL_OBJ) {
-                    printf("%s", ((RyBool *)o)->value ? "true" : "false");
+                val = vm->stack[--vm->sp];
+                if (val.type == NUMBER_OBJ) {
+                    printf("%g", VAL2NUM(val));
+                } else if (val.type == STRING_OBJ) {
+                    printf("%s", VAL2STRING(val)->str);
+                } else if (val.type == BOOL_OBJ) {
+                    printf("%s", VAL2BOOL(val) ? "true" : "false");
                 } else {
-                    printf("<%s %p>", RyObjectTypeNames[o->type], o);
+                    printf("<%s %p>", RyValueTypeNames[val.type], val.as.object);
                 }
                 
                 break;
 
             case OP_HALT:
                 if (vm->sp < 1) runtime_error("stack underflow.", bytecode);
-                o = vm->stack[--vm->sp];
-                if (o->type == NUMBER_OBJ) {
-                    if (((RyNumber *)o)->value == 0) exit(EXIT_SUCCESS);
+                val = vm->stack[--vm->sp];
+                if (val.type == NUMBER_OBJ) {
+                    if (VAL2NUM(val) == 0) exit(EXIT_SUCCESS);
                     exit(EXIT_FAILURE);
                 } else {
                     exit(EXIT_FAILURE);
@@ -243,22 +235,21 @@ void RyVMExecute(RyVM *vm, uint16_t opcode, uint16_t arg, size_t line) {
                 printf("Runtime error : unrecognized opcode %d with argument %d generated at line %zu.\n", bytecode.opcode, bytecode.arg, bytecode.line);
                 exit(1);
         }
-
-        vm->current_func->ip++;
+        VAL2FUNC(vm->current_func)->ip++;
     }
 }
 
 void RyVMMakeFunction(RyVM *vm, size_t f_addr) {
-    vm->main_save_ip = vm->current_func->ip;
+    vm->main_save_ip = VAL2FUNC(vm->current_func)->ip;
     vm->current_func = RyObjectPoolBorrow_Function(&vm->object_pool);
-    RyVariableArrayWrite(&vm->globals, f_addr, (RyObject *)vm->current_func);
+    RyVariableArrayWrite(&vm->globals, f_addr, vm->current_func);
     vm->record_only++;
 }
 
 void RyVMEndMakeFunction(RyVM *vm) {
-    vm->current_func = (RyFunction *)RyVariableArrayGet(&vm->globals, 0);
+    vm->current_func = RyVariableArrayGet(&vm->globals, 0);
     vm->record_only--;
-    vm->current_func->ip = vm->main_save_ip;
+    VAL2FUNC(vm->current_func)->ip = vm->main_save_ip;
 }
 
 void RyVMMakeControlFlow(RyVM *vm) {
@@ -266,7 +257,7 @@ void RyVMMakeControlFlow(RyVM *vm) {
 }
 
 void RyVMEndMakeControlFlow(RyVM *vm, size_t ip, size_t offset) {
-    vm->current_func->block.code[ip].arg = offset;
+    VAL2FUNC(vm->current_func)->block.code[ip].arg = offset;
     vm->record_only--;
 }
 
@@ -274,29 +265,29 @@ void RyCollectGarbage(RyVM *vm) {
 
     // mark
     for(size_t i = 0; i < vm->globals.size; i++) {
-        vm->globals.entries[i]->refc++;
+        RyObjectPoolMark(vm->globals.entries[i]);
     }
 
     for(size_t i = 0; i < vm->constants.size; i++) {
-        vm->constants.entries[i]->refc++;
+        RyObjectPoolMark(vm->constants.entries[i]);
     }
 
-    for(size_t i = 0; i < vm->current_func->locals.size; i++) {
-        vm->current_func->locals.entries[i]->refc++;
+    for(size_t i = 0; i < VAL2FUNC(vm->current_func)->locals.size; i++) {
+        VAL2FUNC(vm->current_func)->locals.entries[i];
     }
 
     for(size_t i = 0; i < vm->csp; i++) {
         for(size_t j = 0; j < vm->frame_call_stack[i].size; j++) {
-            vm->frame_call_stack[i].entries[j]->refc++;
+            RyObjectPoolMark(vm->frame_call_stack[i].entries[j]);
         }
     }
 
     for(size_t i = 0; i < vm->psp; i++) {
-        vm->param_stack[i]->refc++;
+        RyObjectPoolMark(vm->param_stack[i]);
     }
 
     for(size_t i = 0; i < vm->sp; i++) {
-        vm->stack[i]->refc++;
+        RyObjectPoolMark(vm->stack[i]);
     }
 
     // sweep

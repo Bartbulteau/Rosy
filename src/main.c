@@ -45,7 +45,6 @@ int main(int argc, const char *argv[]) {
     char *full_code = (char *)malloc(full_code_length + 1);
     strcpy(full_code, stdlib_code);
     strcat(full_code, code);
-    FREE(code);
 
     /*
         EXECUTION
@@ -66,7 +65,7 @@ int main(int argc, const char *argv[]) {
     LexerFree(&lex);
     ParserFree(&p);
     FREE(full_code);
-
+    FREE(code);
 
     MemoryDebug();
     return 0;

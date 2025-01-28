@@ -3,36 +3,35 @@
 RyBinaryOperation RyBinaryOps[N_BINOP][NUM_OF_OBJ_TYPE][NUM_OF_OBJ_TYPE];
 RyUnaryOperation RyUnaryOps[N_UNOP][NUM_OF_OBJ_TYPE];
 
-RyObject *RyInvalidBinaryTypes(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyObject *res = (RyObject *)RyObjectPoolBorrow_Nil(pool);
+RyValue RyInvalidBinaryTypes(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    RyValue res = {.type = NIL_OBJ};
 
-    printf("Incompatible object types %s and %s in binary operation.\n", RyObjectTypeNames[o1->type], RyObjectTypeNames[o2->type]);
-
-    return res;
-}
-
-RyObject *RyInvalidUnaryType(RyObjectPool *pool, RyObject *o) {
-    RyObject *res = (RyObject *)RyObjectPoolBorrow_Nil(pool);
-
-    printf("Invalid object type %s in unary operation.\n", RyObjectTypeNames[o->type]);
+    printf("Incompatible object types %s and %s in binary operation.\n", RyValueTypeNames[val1.type], RyValueTypeNames[val2.type]);
 
     return res;
 }
 
-RyObject *RyNumNumAdd(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = ((RyNumber *)o1)->value + ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyInvalidUnaryType(RyObjectPool *pool, RyValue val) {
+    RyValue res = {.type = NIL_OBJ};
+
+    printf("Invalid object type %s in unary operation.\n", RyValueTypeNames[val.type]);
+
+    return res;
 }
 
-RyObject *RyStringStringAdd(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyString *res = RyObjectPoolBorrow_String(pool);
-    char *lhs = ((RyString *)o1)->value;
-    char *rhs = ((RyString *)o2)->value;
-    res->value = (char *)MALLOC(strlen(lhs) + strlen(rhs) + 1);
-    strcpy(res->value, lhs);
-    strcat(res->value, rhs);
-    return (RyObject *)res;
+RyValue RyNumNumAdd(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return NUM2VAL(VAL2NUM(val1) + VAL2NUM(val2));
+}
+
+RyValue RyStringStringAdd(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    RyValue res = RyObjectPoolBorrow_String(pool);
+    char *lhs = ((RyString *)val1.as.object)->str;
+    char *rhs = ((RyString *)val2.as.object)->str;
+    char *str = (char *)MALLOC(strlen(lhs) + strlen(rhs) + 1);
+    strcpy(str, lhs);
+    strcat(str, rhs);
+    ((RyString *)res.as.object)->str = str;
+    return res;
 }
 
 void RyLoadAdd() {
@@ -40,80 +39,60 @@ void RyLoadAdd() {
     RyBinaryOps[ADD_BINOP][STRING_OBJ][STRING_OBJ] = &RyStringStringAdd;
 }
 
-RyObject *RyNumNumSub(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = ((RyNumber *)o1)->value - ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumSub(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return NUM2VAL(VAL2NUM(val1) - VAL2NUM(val2));
 }
 
 void RyLoadSub() {
     RyBinaryOps[SUB_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumSub;
 }
 
-RyObject *RyNumNumMul(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = ((RyNumber *)o1)->value * ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumMul(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return NUM2VAL(VAL2NUM(val1) * VAL2NUM(val2));
 }
 
 void RyLoadMul() {
     RyBinaryOps[MUL_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumMul;
 }
 
-RyObject *RyNumNumDiv(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = ((RyNumber *)o1)->value / ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumDiv(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return NUM2VAL(VAL2NUM(val1) / VAL2NUM(val2));
 }
 
 void RyLoadDiv() {
     RyBinaryOps[DIV_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumDiv;
 }
 
-RyObject *RyNumNumMod(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = (int64_t)((RyNumber *)o1)->value % (int64_t)((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumMod(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return NUM2VAL((int64_t)(VAL2NUM(val1)) % (int64_t)(VAL2NUM(val2)));
 }
 
 void RyLoadMod() {
     RyBinaryOps[MOD_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumMod;
 }
 
-RyObject *RyNumNumLess(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value < ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumLess(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) < VAL2NUM(val2));
 }
 
-RyObject *RyNumNumLeq(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value <= ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumLeq(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) <= VAL2NUM(val2));
 }
 
-RyObject *RyNumNumGreat(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value > ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumGreat(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) > VAL2NUM(val2));
 }
 
-RyObject *RyNumNumGreq(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value >= ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumGreq(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) >= VAL2NUM(val2));
 }
 
-RyObject *RyNumNumEq(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value == ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumEq(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) == VAL2NUM(val2));
 }
 
-RyObject *RyNumNumNeq(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyNumber *)o1)->value != ((RyNumber *)o2)->value;
-    return (RyObject *)res;
+RyValue RyNumNumNeq(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2NUM(val1) != VAL2NUM(val2));
 }
 
 void RyLoadComparisions() {
@@ -125,16 +104,12 @@ void RyLoadComparisions() {
     RyBinaryOps[NEQ_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumNeq;
 }
 
-RyObject *RyBoolBoolAnd(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyBool *)o1)->value && ((RyBool *)o2)->value;
-    return (RyObject *)res;
+RyValue RyBoolBoolAnd(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2BOOL(val1) && VAL2BOOL(val2));
 }
 
-RyObject *RyBoolBoolOr(RyObjectPool *pool, RyObject *o1, RyObject *o2) {
-    RyBool *res = RyObjectPoolBorrow_Bool(pool);
-    res->value = ((RyBool *)o1)->value || ((RyBool *)o2)->value;
-    return (RyObject *)res;
+RyValue RyBoolBoolOr(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    return BOOL2VAL(VAL2BOOL(val1) || VAL2BOOL(val2));
 }
 
 void RyLoadLogics() {
@@ -161,16 +136,12 @@ void RyLoadBinOps() {
     RyLoadLogics();
 }
 
-RyObject *RyNumOpp(RyObjectPool *pool, RyObject *o) {
-    RyNumber *res = RyObjectPoolBorrow_Number(pool);
-    res->value = -((RyNumber *)o)->value;
-    return (RyObject *)res;
+RyValue RyNumOpp(RyObjectPool *pool, RyValue val) {
+    return NUM2VAL(-VAL2NUM(val));
 }
 
-RyObject *RyBoolNot(RyObjectPool *pool, RyObject *o) {
-    RyBool *b = RyObjectPoolBorrow_Bool(pool);
-    b->value = !((RyBool *)o)->value;
-    return (RyObject *)b;
+RyValue RyBoolNot(RyObjectPool *pool, RyValue val) {
+    return BOOL2VAL(!VAL2BOOL(val));
 }
 
 void RyLoadUnOps() {
