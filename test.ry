@@ -1,1 +1,5 @@
 println("A" + 10 + "C" == "A10C")
+
+println(10*"*")
+
+println("A"*2)

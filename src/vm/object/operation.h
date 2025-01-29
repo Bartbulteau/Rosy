@@ -68,6 +68,8 @@ void RyLoadSub();
 // MULTIPLICATION
 
 RyValue RyNumNumMul(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyNumStringMul(RyObjectPool *pool, RyValue val1, RyValue val2);
+RyValue RyStringNumMul(RyObjectPool *pool, RyValue val1, RyValue val2);
 
 void RyLoadMul();
 

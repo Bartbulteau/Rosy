@@ -89,8 +89,45 @@ RyValue RyNumNumMul(RyObjectPool *pool, RyValue val1, RyValue val2) {
     return NUM2VAL(VAL2NUM(val1) * VAL2NUM(val2));
 }
 
+RyValue RyNumStringMul(RyObjectPool *pool, RyValue val1, RyValue val2) {
+    int n = (int)VAL2NUM(val1);
+    
+    if (n < 0) return (RyValue){NIL_OBJ};
+
+    char *rhs = VAL2STRING(val2)->str;
+    char *str = (char *)MALLOC(strlen(rhs) * n + 1);
+    str[0] = '\0';
+    for (int i = 0; i < n; i++) {
+        strcat(str, rhs);
+    }
+    
+    RyValue res = RyObjectPoolBorrow_String(pool);
+    VAL2STRING(res)->str = str;
+    return res;
+}
+
+RyValue RyStringNumMul(RyObjectPool *pool, RyValue val1, RyValue val2)
+{
+    int n = (int)VAL2NUM(val2);
+    
+    if (n < 0) return (RyValue){NIL_OBJ};
+
+    char *lhs = VAL2STRING(val1)->str;
+    char *str = (char *)MALLOC(strlen(lhs) * n + 1);
+    str[0] = '\0';
+    for (int i = 0; i < n; i++) {
+        strcat(str, lhs);
+    }
+    
+    RyValue res = RyObjectPoolBorrow_String(pool);
+    VAL2STRING(res)->str = str;
+    return res;
+}
+
 void RyLoadMul() {
     RyBinaryOps[MUL_BINOP][NUMBER_OBJ][NUMBER_OBJ] = &RyNumNumMul;
+    RyBinaryOps[MUL_BINOP][NUMBER_OBJ][STRING_OBJ] = &RyNumStringMul;
+    RyBinaryOps[MUL_BINOP][STRING_OBJ][NUMBER_OBJ] = &RyStringNumMul;
 }
 
 RyValue RyNumNumDiv(RyObjectPool *pool, RyValue val1, RyValue val2) {
